@@ -1,0 +1,116 @@
+---
+title: "lab_assignment_2"
+author: "Ivan"
+date: "11/14/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+redwine <- read_delim("~/Desktop/MSIA/Courses/MSIA 400 Everything starts with data/Lab Assignment 1/Lab Assignment 2/redwine.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+#str(redwine)
+#summary(redwine)
+```
+
+## 1
+```{r}
+mean(redwine$RS,na.rm = T)
+mean(redwine$SD,na.rm = T)
+```
+
+## 2
+```{r}
+Sd <- redwine$SD[!is.na(redwine$SD)]
+Fs <- redwine$FS[!is.na(redwine$SD)]
+fit.sd <- lm(Sd~Fs)
+coefficients(fit.sd)
+```
+
+## 3
+```{r}
+test.sd <- data.frame(Fs = redwine$FS[is.na(redwine$SD)])
+redwine$SD[is.na(redwine$SD)] <- predict(fit.sd,test.sd)
+mean(redwine$SD)
+```
+
+## 4
+```{r}
+avg.imp <- function (a, avg){        
+  missing <- is.na(a)        
+  imputed <- a        
+  imputed[missing] <- avg        
+  return (imputed)   
+}
+mean(avg.imp(redwine$RS,mean(redwine$RS[!is.na(redwine$RS)])))
+```
+
+## 5
+```{r}
+redwine$RS <- avg.imp(redwine$RS,mean(redwine$RS[!is.na(redwine$RS)]))
+
+winemodel <- lm(QA~.,data = redwine)
+coefficients(winemodel)
+
+```
+## 6
+```{r}
+summary(winemodel)
+```
+PH has the largest p-value thus are least likely to be related to QA
+
+## 7
+```{r}
+CVInd <- function(n,K) {
+m<-floor(n/K)
+r<-n-m*K
+I<-sample(n,n)
+Ind<-list()
+length(Ind)<-K
+for (k in 1:K) {
+if (k <= r) kpart <- ((m+1)*(k-1)+1):((m+1)*k)
+else kpart<-((m+1)*r+m*(k-r-1)+1):((m+1)*r+m*(k-r))
+Ind[[k]] <- I[kpart] #indices for kth part of data
+}
+Ind
+}
+Nrep <- 20
+K <- 5
+n = nrow(redwine)
+SSE <- c()
+for (j in 1:Nrep) {
+  Ind<-CVInd(n,K)
+  for (k in 1:K) {
+    out <- lm(QA~.,data = redwine[-Ind[[k]],])
+    yhat <- as.numeric(predict(out,redwine[Ind[[k]],]))
+    SSE <- c(SSE,sum((redwine$QA[Ind[[k]]]-yhat)^2))
+  }
+}
+mean(SSE)
+```
+
+
+
+## 8
+```{r}
+mean(redwine$PH)
+sd(redwine$PH)
+
+PH.lb = mean(redwine$PH) - 3 * sd(redwine$PH)
+PH.ub = mean(redwine$PH) + 3 * sd(redwine$PH)
+redwine2 <- subset(redwine, redwine$PH < PH.ub & redwine$PH > PH.lb)
+dim(redwine2)
+nrow(redwine)
+```
+19 observations are removed. 
+
+## 9
+```{r}
+fit = lm(QA ~ ., data = redwine2)
+summary(fit)
+```
+
+The new model is better because both F statistics and R square values increased. VA,CH,SD,SU,AL have the smallest p values so most likely to be related with QA. 
