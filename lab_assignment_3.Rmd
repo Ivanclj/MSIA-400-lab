@@ -1,0 +1,74 @@
+---
+title: "lab_assignment_3"
+author: "Ivan"
+date: "11/29/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,include=FALSE}
+library(tidyverse)
+```
+
+#1.
+##(a)
+sample points from a distribution that is hard to sample from directly
+
+##(b)
+q(.|.) does not have to be symmetric for MH but has to be for Metropolis Algorithm. 
+Thus their accepting probability are different as well.
+
+##(c)
+Ridge regression add a l2 regularization term to the regression thus pushing predictors that are less important to have coefficients closer to zero thus performing variable selections.
+
+Lasso add a l1 regularization term to the regression. Different from ridge, Lasso pushes coefficient to zero for some insignificant variables.
+
+##(d)
+The IIA assumptiton states the ration of probability of choosing between two alternatives is independent of the presence or any other alternative's attributes.
+
+#2.
+##(a)
+```{r}
+library(quantreg)
+gas_mileage <- read.csv('../gas_mileage.csv')
+str(gas_mileage)
+fit2 <- rq(Mpg~.,data = gas_mileage,tau=seq(0.05,0.95,0.05))
+summary(fit2)
+
+```
+##(b)
+```{r}
+plot(fit2)
+```
+##(c)
+Torque and Rear_axie_ratio showed constant positive linear relationship with the response. And they both reached high coefficients beteween 0.4 to 0.6 conditional quantile. trans.type is close to 0 the majority time but suddenly changed to highly negatively correlated after 0.8th conditional quantile.
+
+##(d)
+```{r}
+summary(fit2,se='boot')[10]
+```
+
+#3.
+##(a)
+```{r}
+library(e1071)
+car <- read.csv("../car.csv", header = T)
+svm <- svm(as.factor(y) ~ ., data = car)
+summary(svm)
+```
+##(b)
+```{r}
+plot(svm,car)
+
+```
+
+
+##(c)
+```{r}
+predict(svm,data.frame(income=50,car_age=5),type='response')
+
+```
+the family will buy a car.
